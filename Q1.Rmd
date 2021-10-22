@@ -1,0 +1,8 @@
+---
+title: "Exercise 1"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::html_document2
+---
+
+# Exercise 1
