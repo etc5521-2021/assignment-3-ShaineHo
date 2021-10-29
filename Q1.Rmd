@@ -6,3 +6,321 @@ output:
 ---
 
 # Exercise 1
+
+```{r settings, message = FALSE}
+#settings and libraries
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+library(tidyverse)
+library(patchwork)
+```
+
+```{r read-data}
+# Read in data
+DataAnalyst <- read_csv("data/DataAnalyst.csv")
+BusinessAnalyst <- read_csv("data/BusinessAnalyst.csv")
+DataScientist <- read_csv("data/DataScientist.csv")
+```
+
+a. Scrutinize the data to assess structure and quality. Are there any improbable or problematic entries? Provide a summary of checks performed and edit the data so entries are valid and meaningful where editing is reasonable to do.
+
+```{r data-cleaning}
+# Mutate a new column for the job Category and then Combine the three data sets
+DataAnalyst <- DataAnalyst %>% 
+  mutate(Job_Category = "DataAnalyst")
+
+BusinessAnalyst <- BusinessAnalyst %>% 
+  mutate(Job_Category = "BusinessAnalyst")
+
+DataScientist <- DataScientist %>% 
+  mutate(Job_Category = "DataScientist")
+
+Combined_Job <- DataAnalyst %>% 
+  rbind(BusinessAnalyst) %>% 
+  rbind(DataScientist)
+  
+# Separate the salary estimate into "Salary_Estimate" and "Salary_Est_Provider" and remove the missing value (-1) and bracket in provider
+Combined_Job_clean <- Combined_Job %>% 
+  filter(`Salary Estimate` != -1) %>% 
+  separate(`Salary Estimate`, 
+           into = c("Salary_Estimate", "Salary_Est_Provider"), 
+           sep = "\\(") %>%
+  separate(Salary_Est_Provider,
+           into = c("Salary_Est_Provider", "remove"),
+           sep = "est.") %>% 
+  select(-remove) %>% 
+  na.omit()
+
+# Remove the "\n rating from Company Name"
+Combined_Job_clean <- Combined_Job_clean %>% 
+  filter(`Company Name` != -1 & `Company Name` != 1) %>% 
+  separate(`Company Name`, into = c("Company_Name","remove"), sep = "\n" ) %>%
+  select(-remove)
+
+# Separate the Location variable into Location and Location_State
+Combined_Job_clean <- Combined_Job_clean %>% 
+  separate(Location,
+           into = c("Location", "Location_State"),
+           sep = ", ") %>% 
+   mutate(Location_State = ifelse(Location_State == "Arapahoe", "CO", Location_State),
+          Location_State = ifelse(Location_State == "Los Angeles", "CA", Location_State))
+
+# Separate the Headquarters variable into Headquarters and Headquarters_State
+Combined_Job_clean <- Combined_Job_clean %>% 
+  separate(Headquarters,
+           into = c("Headquarters", "Headquarters_Location"),
+           sep = ", ")
+
+# Remove missing (-1, 1, Unknown) and the word "employees"from the Size
+Combined_Job_clean <- Combined_Job_clean %>% 
+  filter(Size != -1 & Size != 1 & Size != "Unknown") %>% 
+  separate(Size, into = c("Size", "remove"), sep = " e") %>% 
+  select(-remove)
+```
+
+b. How many job listings provide salary (intervals) in a per hour basis?
+
+```{r}
+#unique(Combined_Job_clean$Salary_Estimate) 
+  Combined_Job_clean %>% 
+  filter(str_detect(Salary_Estimate, "Per")) %>% 
+  group_by(`Job Title`) %>% 
+  tally()
+```
+
+There are 20 job listings provide salary (intervals) in a per hour basis.   
+
+<br>
+
+c. We want to investigate what the differences are between the job listings for those under different classification, i.e. business analytics, data analytics and data science. Compare across the classifications using appropriate graphics the:   
+
+1. salary intervals (study the minimum and maximum of the intervals)
+
+```{r salary-interval}
+# Extract min and max salary
+Salary_clean <- Combined_Job_clean %>% 
+  filter(!str_detect(Salary_Estimate, "Per"))
+
+ Salary_Interval <- str_extract_all(Salary_clean$Salary_Estimate, "\\d+") %>% 
+    unlist() %>% 
+    as.numeric()
+ 
+# Mutate Salary interval by Salary_Min and Salary_Max
+ Combined_Job_clean <- Salary_clean %>% 
+   mutate(Salary_Min = (Salary_Interval[seq(1,length(Salary_Interval), 2)])*1000,
+          Salary_Max = (Salary_Interval[seq(0,length(Salary_Interval), 2)])*1000)
+ 
+ Combined_Job_clean %>% 
+   group_by(Job_Category) %>% 
+   mutate(Salary_Max = max(Salary_Max),
+          Salary_Min = min(Salary_Min)) %>% 
+   pivot_longer(cols = c("Salary_Min", "Salary_Max"),
+                         names_to = "Salary_Interval",
+                         values_to = "Salary_Range") %>% 
+   ggplot(aes(x = Job_Category,
+              y = Salary_Range,
+              color = Job_Category))+ 
+   geom_boxplot()+
+   theme_bw()+
+   labs(x = "Job Listings",
+        y = "Salary",
+        title = "Salary Intervals by Job Listings")+
+   theme(legend.position =  "none")
+```
+
+From the above, it is found that data scientist had the largest variation in salary whereas data analyst had smallest. Moreover, both the lowest and highest salaries are found in Data Scientist category.
+
+2. location of the job (study by State)
+
+```{r location}
+# Count the number of job by State and Job Listings
+Combined_Job_clean %>% 
+  filter(Location_State != "United Kingdom") %>% 
+   group_by(Location_State, Job_Category) %>% 
+  tally() %>% 
+   ggplot(aes(x = reorder(Location_State, desc(n)),
+              y = n,
+              fill = Job_Category))+ 
+   geom_col(position = "dodge")+
+   theme_bw()+
+   labs(x = "State",
+        y = "Number of Jobs",
+        title = "Locations of job by State",
+        fill = "Job Listings")+
+   theme(legend.position =  "bottom")
+
+```
+
+Based on the plot above, it is found that the majority number of jobs are located in Texas(TX) and California(CA). Moreover, the number of Business Analyst and Data Scientists are higher in most of the states like Illinois(IL), Pennsylvania(PA) and Arizona(AZ),etc which provide all of the three job listings.   
+However, it is found that there are several states like Colorado(CO), North Carolina(NC), Washington(WA) etc. provide data analyst jobs only.   
+On the other hand, New York State is the only city which has the higher number of data analyst compare with the remaining two when all three job listings are available.
+
+3. company size
+
+```{r compan-size}
+# Count the number of company size by Job Listings
+Combined_Job_clean %>% 
+  group_by(Size, Job_Category) %>% 
+  tally() %>%
+    ggplot(aes(x = n,
+              y = reorder(Size,n),
+              fill = Job_Category))+ 
+   geom_col(position = "dodge")+
+   theme_bw()+
+   labs(x = "Number of Job Listings",
+        y = "Size",
+        title = "Number of Job listings by Size",
+        fill = "Job Listings")+
+   theme(legend.position =  "bottom")
+```
+Based on the plot, it is found that the number of job listings are distributed quite evenly within different company sizes.   
+Also, the Largest size of company (10000+ employees) in this data has highest number of job listings when considering three Job listings together. Whereas the lowest is found in Company size with 5001 to 10000 employees.   
+Moreover, it is found that the highest number of job listings is found in Data Scientist category whereas the lowest is found in Data Analyst.   
+
+4. industry
+
+```{r industry}
+Industry_BA <- Combined_Job_clean %>%
+  filter(Industry != -1) %>% 
+  filter(Job_Category == "BusinessAnalyst") %>% 
+  group_by(Industry) %>%
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  top_n(10) %>% 
+  ggplot(aes(x = n,
+             y = reorder(Industry, n)))+
+  geom_col(fill = "#F8766D")+
+  theme_bw()+
+  labs(x = "Number of Jobs",
+       y = "Industry",
+       title = "Number of Jobs in Business Analyst Category")
+
+Industry_DA <- Combined_Job_clean %>%
+  filter(Industry != -1) %>% 
+  filter(Job_Category == "DataAnalyst") %>% 
+  group_by(Industry) %>%
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  top_n(10) %>% 
+  ggplot(aes(x = n,
+             y = reorder(Industry, n)))+
+  geom_col(fill = "#00BA38")+
+  theme_bw()+
+  labs(x = "Number of Jobs",
+       y = "Industry",
+       title = "Number of Jobs in Data Analyst Category")
+
+Industry_DS <- Combined_Job_clean %>%
+  filter(Industry != -1) %>% 
+  filter(Job_Category == "DataScientist") %>% 
+  group_by(Industry) %>%
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  top_n(10) %>% 
+  ggplot(aes(x = n,
+             y = reorder(Industry, n)))+
+  geom_col(fill = "#619CFF")+
+  theme_bw()+
+  labs(x = "Number of Jobs",
+       y = "Industry",
+       title = "Top 5 Number of Jobs in Data Scientist Category")
+
+Industry_BA/Industry_DA/Industry_DS
+
+```
+
+As the total number of industries is above 100, for simplification, the top 10 number of jobs within the industries are taken to compare the differences between the three job listings.   
+It is found that in the IT Services followed by Staffing & Outsourcing are the highest within these three Job Listings. Whereas, most of the remainings are also shown in the three Job Listings but in different order.   
+However, there are particular industries with the top 10 numbers only found in specific Job Category. For example, insurance carriers industry is only found in Business Analyst Category, Advertising & Marketing is only found in Data Analyst Category. Meanwhile, Biotech & Pharmaceuticals is only found in Data Scitentist Category.
+
+5. sector
+
+```{r sector}
+Combined_Job_clean %>% 
+   filter(Industry != -1) %>% 
+  group_by(Sector, Job_Category) %>% 
+  tally() %>% 
+  ggplot(aes(x = n,
+             y = reorder(Sector,n),
+             fill = Job_Category)) +
+  geom_col(position = "dodge")+
+  theme_bw()+
+   labs(x = "Number of Jobs",
+        y = "Size",
+        title = "Number of Jobs by Sectors",
+        fill = "Job Listings")+
+   theme(legend.position =  "bottom")
+```
+From the above, the highest number of jobs is found in Information Technology followed by Business Services Sector. While the remainings vary by the sectors.  
+Moreover, it is found that Number of Jobs in Data Analyst seem to be relatively lower than the other two in most of the Sectors.
+
+
+d. Your friend suspects that if an employer provides a salary range for the job, the salary is large and hence more attractive to potential candidates. Investigate this claim. Your investigation should be supported by graphics.
+
+```{r salary-range}
+Combined_Job_clean %>%
+  pivot_longer(cols = c(Salary_Min, Salary_Max),
+               names_to = "Salary_Interval",
+               values_to = "Salary_Range") %>%
+  ggplot(aes(x = Salary_Interval,
+             y = Salary_Range,
+             color = Salary_Interval)) +
+  geom_violin() +
+  theme_bw()+
+  facet_wrap(~Job_Category)+
+  labs(x = "",
+       y = "Salary Range",
+       title = "Salary Distribution by Interval",
+       color = "Salary Interval")+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())+
+    scale_colour_discrete(labels = c("Max.Salary", "Min.Salary"))
+```
+
+From the above, it is found that the claim is false as the upper part of the upper part of the violin plot which refers to the large salary is the narrowest. This means that the number is actually lower.   
+Moreover it is found that the bottom part of the plot which refers to lower salary is wider. This means that there are more number of people in lower salary intervals.
+
+
+e. Is the location (via by State) associated with the salary and/or sector? Show graphics to best your conclusion.
+
+```{r salary-location}
+Combined_Job_clean %>% 
+  filter(Location_State != "United Kingdom") %>% 
+    pivot_longer(cols = c(Salary_Min, Salary_Max),
+               names_to = "Salary_Interval",
+               values_to = "Salary_Range") %>% 
+  ggplot(aes(x = Salary_Range,
+             y = reorder(Location_State, Salary_Range),
+             color = Salary_Interval))+
+  geom_boxplot()+
+  theme_bw()+
+   labs(x = "Salary Range",
+        y = "State",
+       title = "Salary range by Location",
+       color = "Salary Interval")+
+    scale_colour_discrete(labels = c("Max.Salary", "Min.Salary"))
+```
+
+Based on the plot, it is found that salary indeed varies by States. The highest salary group is found in California(CA), followed by New York(NY) and Ohio(OH).  Whereas the lowest were found in Utah(UT) follow by Georgia(GA) and Iiana(IN).
+
+```{r salary-sector}
+Combined_Job_clean %>% 
+  filter(Sector != -1) %>% 
+    pivot_longer(cols = c(Salary_Min, Salary_Max),
+               names_to = "Salary_Interval",
+               values_to = "Salary_Range") %>% 
+  ggplot(aes(x = Salary_Range,
+             y = reorder(Sector, Salary_Range),
+             color = Salary_Interval))+
+  geom_boxplot()+
+  theme_bw()+
+   labs(x = "Salary Range",
+        y = "Sectors",
+        title = "Salary range by Sector",
+        color = "Salary Interval")+
+    scale_colour_discrete(labels = c("Max.Salary", "Min.Salary"))
+
+```
+Based on the boxplot, it is found that the mean value of the maximum salary and minimum salary are close to each others within the different Sectors. Except from Travel & Tourism, Restaurants, Bars & Food Services as well as Mining & Metals which the mean maximum salary are slightly lower than the other sectors.  
+On the other hand, it is found that the mean maximum and minimum salary of Mining & Metals is approximately equals to the lower quantile of the salary Interval.   
+
+However, as there are lots of outliers within the Sectors, the mean may not be accurate enough to reflect the salary. Taking median for comparison may be more appropriate for comparison.
