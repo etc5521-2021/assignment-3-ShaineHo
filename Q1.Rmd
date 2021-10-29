@@ -111,23 +111,24 @@ Salary_clean <- Combined_Job_clean %>%
  
  Combined_Job_clean %>% 
    group_by(Job_Category) %>% 
-   mutate(Salary_Max = max(Salary_Max),
-          Salary_Min = min(Salary_Min)) %>% 
    pivot_longer(cols = c("Salary_Min", "Salary_Max"),
                          names_to = "Salary_Interval",
                          values_to = "Salary_Range") %>% 
    ggplot(aes(x = Job_Category,
               y = Salary_Range,
-              color = Job_Category))+ 
+              color = Salary_Interval))+ 
    geom_boxplot()+
    theme_bw()+
+   #facet_wrap(~Job_Category)+
    labs(x = "Job Listings",
         y = "Salary",
-        title = "Salary Intervals by Job Listings")+
-   theme(legend.position =  "none")
+        title = "Salary Intervals by Job Listings",
+        color = "Salary Interval")+
+   scale_colour_discrete(labels = c("Max.Salary", "Min.Salary"))
 ```
 
-From the above, it is found that data scientist had the largest variation in salary whereas data analyst had smallest. Moreover, both the lowest and highest salaries are found in Data Scientist category.
+From the above, it is found that data scientist had higher mean income in both maximum and minimum salary compare to the other two category. Moreover, the larger variation in salary is also observed in this category.   
+On the other hand, the mean and variation of maximum and minimum salary of Business Analyst and Data Analyst are pretty close.
 
 2. location of the job (study by State)
 
