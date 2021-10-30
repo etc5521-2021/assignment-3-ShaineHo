@@ -7,7 +7,7 @@ output:
 
 # Exercise 3
 
-```{r settings, message = FALSE}
+```{r settings-q3, message = FALSE}
 #settings and libraries
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 library(tidyverse)
@@ -16,7 +16,7 @@ library(patchwork)
 ```
 
 
-```{r read-data}
+```{r read-data-q3}
 #read data
 control <- read_csv("data/control_data.csv")
 experiment <- read_csv("data/experiment_data.csv")
@@ -24,7 +24,7 @@ experiment <- read_csv("data/experiment_data.csv")
 
 a. Make a plot (or two) of the data that provides a suitable comparison between the pageviews of the two groups relative to time. Write a sentence comparing the two groups.
  
-```{r data-cleaning}
+```{r data-cleaning-q3}
 #mutate new column: Group control and experiment
 control <- control %>% 
  mutate(Group = "control") 
@@ -32,7 +32,7 @@ control <- control %>%
 experiment <- experiment %>% 
   mutate(Group = "experiment")
 
-#Combine the data sets, seperate weekday from date and mutate the year 2018
+#Combine the data sets, separate weekday from date and mutate the year 2018
 combined <- control %>% 
   rbind(experiment) %>% 
   separate(Date, c("Weekday", "Date"), ",") %>% 

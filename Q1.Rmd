@@ -7,14 +7,14 @@ output:
 
 # Exercise 1
 
-```{r settings, message = FALSE}
+```{r settings-q1, message = FALSE}
 #settings and libraries
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 library(tidyverse)
 library(patchwork)
 ```
 
-```{r read-data}
+```{r read-data-q1}
 # Read in data
 DataAnalyst <- read_csv("data/DataAnalyst.csv")
 BusinessAnalyst <- read_csv("data/BusinessAnalyst.csv")
@@ -23,7 +23,7 @@ DataScientist <- read_csv("data/DataScientist.csv")
 
 a. Scrutinize the data to assess structure and quality. Are there any improbable or problematic entries? Provide a summary of checks performed and edit the data so entries are valid and meaningful where editing is reasonable to do.
 
-```{r data-cleaning}
+```{r data-cleaning-q1}
 # Mutate a new column for the job Category and then Combine the three data sets
 DataAnalyst <- DataAnalyst %>% 
   mutate(Job_Category = "DataAnalyst")
@@ -79,7 +79,7 @@ Combined_Job_clean <- Combined_Job_clean %>%
 
 b. How many job listings provide salary (intervals) in a per hour basis?
 
-```{r}
+```{r salary-hour}
 #unique(Combined_Job_clean$Salary_Estimate) 
   Combined_Job_clean %>% 
   filter(str_detect(Salary_Estimate, "Per")) %>% 

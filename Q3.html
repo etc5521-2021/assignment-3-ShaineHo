@@ -371,7 +371,7 @@ control &lt;- control %&gt;%
 experiment &lt;- experiment %&gt;% 
   mutate(Group = &quot;experiment&quot;)
 
-#Combine the data sets, seperate weekday from date and mutate the year 2018
+#Combine the data sets, separate weekday from date and mutate the year 2018
 combined &lt;- control %&gt;% 
   rbind(experiment) %&gt;% 
   separate(Date, c(&quot;Weekday&quot;, &quot;Date&quot;), &quot;,&quot;) %&gt;% 
