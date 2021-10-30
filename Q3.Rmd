@@ -6,3 +6,217 @@ output:
 ---
 
 # Exercise 3
+
+```{r settings, message = FALSE}
+#settings and libraries
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+library(tidyverse)
+library(nullabor)
+library(patchwork)
+```
+
+
+```{r read-data}
+#read data
+control <- read_csv("data/control_data.csv")
+experiment <- read_csv("data/experiment_data.csv")
+```
+
+a. Make a plot (or two) of the data that provides a suitable comparison between the pageviews of the two groups relative to time. Write a sentence comparing the two groups.
+ 
+```{r data-cleaning}
+#mutate new column: Group control and experiment
+control <- control %>% 
+ mutate(Group = "control") 
+
+experiment <- experiment %>% 
+  mutate(Group = "experiment")
+
+#Combine the data sets, seperate weekday from date and mutate the year 2018
+combined <- control %>% 
+  rbind(experiment) %>% 
+  separate(Date, c("Weekday", "Date"), ",") %>% 
+  mutate(Year = "2018")
+
+#paste year to date
+combined <- combined %>% 
+  mutate(Date = paste0(combined$Date," ", combined$Year))
+
+# cleaned Date variable
+combined_clean <- combined %>% 
+  mutate(Date = as.Date(Date, " %b %d %Y"))
+```
+
+
+```{r plot-a, out.width = "60%", out.height = "50%"}
+combined_clean %>% 
+  ggplot(aes(x = Date,
+             y = Pageviews,
+             color = Group))+
+  geom_line()+
+  geom_point()+
+  theme_bw()+
+  labs(title = "Trend of Pageviews by date")
+```
+
+From the plot, it is found that the Pageviews of the two groups are basically following the similar trend.
+
+<br>
+b. Make an appropriate transformation of the data, and plot, to examine whether there is a difference in Clicks, summarising what you learn
+
+```{r plot-b, out.width = "60%", out.height = "50%"}
+combined_clean %>% 
+  na.omit() %>% 
+  ggplot(aes(x = Group,
+             y = Clicks,
+             color = Group))+
+  geom_violin()+
+  theme_bw()+
+  labs(title = "Violin plot of Clicks")
+```
+
+Based on the violin plot, the variation of clicks in control group is larger than control group. However, the number of clicks is higher in control group as there are wider shape at the upper part of the shape which means that the digital marketing measures might be lack of effectiveness.
+
+<br>
+c. Repeat (b) to check if there is a difference between the groups in Enrollments, summarising what you learn.
+
+```{r plot-c, out.width = "60%", out.height = "50%"}
+combined_clean %>% 
+  na.omit() %>% 
+  ggplot(aes(x = Group,
+             y = Enrollments,
+             color = Group))+
+  geom_violin()+
+  theme_bw()+
+  labs(title = "Violin plot of Enrollments")
+```
+
+Based on the violin plot, it is found that there are higher number of enrollments in the control group which means that the marketing measures are not that effective to the erollments of the free trial of the website.
+
+<br>
+d. Repeat (b) to check if there is a difference between the groups in Payments, summarising what you learn.
+
+```{r plot-d, out.width = "60%", out.height = "50%"}
+combined_clean %>% 
+  na.omit() %>% 
+  ggplot(aes(x = Group,
+             y = Payments,
+             color = Group))+
+  geom_violin()+
+  theme_bw()+
+  labs(title = "Violin plot of Payments")
+```
+
+According to the violin plot, it is found that the variation of experiment group is higher. Moreover, there are not obvious differences observed on the payments between two groups as control group is only slightly higher in payments. This means even there are some advertisement made in experiment group, the number of payments do not have significant change. Thus, the measure in experiment group is not effective.
+
+<br>
+e. The variables can be considered to monitor the flow of visitor traffic to the site. Pageviews is the number of visitors to the site, and some of these will click on the page. From those that click on the site some will enrol, and some of those that enrol will continue to pay for the service. Make a suitable plot to examine the flow of traffic, so that you can compare the flow between the two groups.
+
+```{r plot-e-pc}
+combined_clean %>% 
+   na.omit() %>% 
+  ggplot(aes(x = Pageviews,
+             y = Clicks,
+             color = Group))+
+  geom_smooth(se = FALSE)+
+  geom_point()+
+  theme_bw()+
+  ggtitle("Flow from Pageviews to Clicks")
+```
+
+From the plot, it is found that, in the case of flow from pageviews to clicks, when the pageviews increase, clicks increase following the same trend. Moreover, the numbers are very close to each other in control and experiment groups.   
+
+```{r plot-e-ce}
+combined_clean %>% 
+   na.omit() %>% 
+  ggplot(aes(x = Clicks,
+             y = Enrollments,
+             color = Group))+
+  geom_smooth(se = FALSE)+
+  geom_point()+
+  theme_bw()+
+  ggtitle("Flow from Clicks to Enrollments")
+```
+
+On the other hand, when observing flow from clicks to enrollment, it this found that they are basically following the same trend. However, the slope seem to be more steep in experiment groups which indicate higher variation. In addition, it is observed that, the number of enrollments  are mostly higher in control group which means that the digital marketing measures might be lack of effectiveness.
+
+```{r plot-e-ep}
+combined_clean %>% 
+   na.omit() %>% 
+  ggplot(aes(x = Enrollments,
+             y = Payments,
+             color = Group))+
+  geom_smooth(se = FALSE)+
+  geom_point()+
+  theme_bw()+
+   ggtitle("Flow from Enrollments to Payments")
+```
+
+From the above, it is found that the flow from enrollments to payments, the number of control and experiment group follow the same trend when the enrollment is below 200. However, there's an increase from 200 in control group when experiment is in opposite direction. This indicates that the\ digital marketing measures might be ineffective.
+
+<br>
+f. Check what you learn about the difference in flow of traffic between control and experiment using a lineup plot.   
+
+```{r plot-f-pc, out.width="80%"}
+set.seed(330)
+pc_new <- lineup(method = null_permute("Clicks"), true = combined_clean, n = 10)
+
+pc_new %>% 
+   na.omit() %>% 
+  ggplot(aes(x = Pageviews,
+             y = Clicks,
+             color = Group))+
+  geom_smooth(se = FALSE)+
+  geom_point()+
+  facet_wrap(~.sample, nrow = 2)+
+  theme_bw()+
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none")
+```
+
+From the above, it is found that plot 1 which is obviously different from the others has the most fitted line to the data among these 10 plots. However, there are not obvious evidence showing whether the red or the green line performs better.
+
+```{r plot-f-ce, out.width="80%"}
+set.seed(330)
+ce_new <- lineup(method = null_permute("Enrollments"), true = combined_clean, n = 10)
+
+ce_new %>% 
+   na.omit() %>% 
+  ggplot(aes(x = Clicks,
+             y = Enrollments,
+             color = Group))+
+  geom_smooth(se = FALSE)+
+  geom_point()+
+  facet_wrap(~.sample, nrow = 2)+
+  theme_bw()+
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none")
+```
+
+From the above, only plot 1 has the similar trend on the movement within two lines while the others mostly have different patterns.   
+On the other hand, it is found that in most of the cases, the red line has better performance than the green line which proves the conclusion from part e.
+
+```{r plot-f-ep, out.width="80%"}
+set.seed(330)
+ep_new <- lineup(method = null_permute("Payments"), true = combined_clean, n = 10)
+
+ep_new %>% 
+   na.omit() %>% 
+  ggplot(aes(x = Enrollments,
+             y = Payments,
+             color = Group))+
+  geom_smooth(se = FALSE)+
+  geom_point()+
+  facet_wrap(~.sample, nrow = 2)+
+  theme_bw()+
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none")
+```
+
+From the above, it seems that green line has better performance as it is mostly better than the red line. This draws an opposite conclusion mentioned in part e.
