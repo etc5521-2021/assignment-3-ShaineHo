@@ -21,7 +21,8 @@ BusinessAnalyst <- read_csv("data/BusinessAnalyst.csv")
 DataScientist <- read_csv("data/DataScientist.csv")
 ```
 
-a. Scrutinize the data to assess structure and quality. Are there any improbable or problematic entries? Provide a summary of checks performed and edit the data so entries are valid and meaningful where editing is reasonable to do.
+## a. 
+Scrutinize the data to assess structure and quality. Are there any improbable or problematic entries? Provide a summary of checks performed and edit the data so entries are valid and meaningful where editing is reasonable to do.
 
 ```{r data-cleaning-q1}
 # Mutate a new column for the job Category and then Combine the three data sets
@@ -77,7 +78,8 @@ Combined_Job_clean <- Combined_Job_clean %>%
   select(-remove)
 ```
 
-b. How many job listings provide salary (intervals) in a per hour basis?
+## b. 
+How many job listings provide salary (intervals) in a per hour basis?
 
 ```{r salary-hour}
 #unique(Combined_Job_clean$Salary_Estimate) 
@@ -89,11 +91,10 @@ b. How many job listings provide salary (intervals) in a per hour basis?
 
 There are 20 job listings provide salary (intervals) in a per hour basis.   
 
-<br>
+## c. 
+We want to investigate what the differences are between the job listings for those under different classification, i.e. business analytics, data analytics and data science. Compare across the classifications using appropriate graphics the:   
 
-c. We want to investigate what the differences are between the job listings for those under different classification, i.e. business analytics, data analytics and data science. Compare across the classifications using appropriate graphics the:   
-
-1. salary intervals (study the minimum and maximum of the intervals)
+### 1. salary intervals (study the minimum and maximum of the intervals)
 
 ```{r salary-interval}
 # Extract min and max salary
@@ -130,7 +131,7 @@ Salary_clean <- Combined_Job_clean %>%
 From the above, it is found that data scientist had higher mean income in both maximum and minimum salary compare to the other two category. Moreover, the larger variation in salary is also observed in this category.   
 On the other hand, the mean and variation of maximum and minimum salary of Business Analyst and Data Analyst are pretty close.
 
-2. location of the job (study by State)
+### 2. location of the job (study by State)
 
 ```{r location}
 # Count the number of job by State and Job Listings
@@ -155,7 +156,7 @@ Based on the plot above, it is found that the majority number of jobs are locate
 However, it is found that there are several states like Colorado(CO), North Carolina(NC), Washington(WA) etc. provide data analyst jobs only.   
 On the other hand, New York State is the only city which has the higher number of data analyst compare with the remaining two when all three job listings are available.
 
-3. company size
+### 3. company size
 
 ```{r compan-size}
 # Count the number of company size by Job Listings
@@ -173,13 +174,14 @@ Combined_Job_clean %>%
         fill = "Job Listings")+
    theme(legend.position =  "bottom")
 ```
+
 Based on the plot, it is found that the number of job listings are distributed quite evenly within different company sizes.   
 Also, the Largest size of company (10000+ employees) in this data has highest number of job listings when considering three Job listings together. Whereas the lowest is found in Company size with 5001 to 10000 employees.   
 Moreover, it is found that the highest number of job listings is found in Data Scientist category whereas the lowest is found in Data Analyst.   
 
-4. industry
+### 4. industry
 
-```{r industry}
+```{r industry, fig.height= 6}
 Industry_BA <- Combined_Job_clean %>%
   filter(Industry != -1) %>% 
   filter(Job_Category == "BusinessAnalyst") %>% 
@@ -233,9 +235,9 @@ As the total number of industries is above 100, for simplification, the top 10 n
 It is found that in the IT Services followed by Staffing & Outsourcing are the highest within these three Job Listings. Whereas, most of the remainings are also shown in the three Job Listings but in different order.   
 However, there are particular industries with the top 10 numbers only found in specific Job Category. For example, insurance carriers industry is only found in Business Analyst Category, Advertising & Marketing is only found in Data Analyst Category. Meanwhile, Biotech & Pharmaceuticals is only found in Data Scitentist Category.
 
-5. sector
+###  5. sector
 
-```{r sector}
+```{r sector, fig.height=8}
 Combined_Job_clean %>% 
    filter(Industry != -1) %>% 
   group_by(Sector, Job_Category) %>% 
@@ -246,16 +248,18 @@ Combined_Job_clean %>%
   geom_col(position = "dodge")+
   theme_bw()+
    labs(x = "Number of Jobs",
-        y = "Size",
+        y = "Sectors",
         title = "Number of Jobs by Sectors",
         fill = "Job Listings")+
    theme(legend.position =  "bottom")
 ```
+
 From the above, the highest number of jobs is found in Information Technology followed by Business Services Sector. While the remainings vary by the sectors.  
 Moreover, it is found that Number of Jobs in Data Analyst seem to be relatively lower than the other two in most of the Sectors.
 
 
-d. Your friend suspects that if an employer provides a salary range for the job, the salary is large and hence more attractive to potential candidates. Investigate this claim. Your investigation should be supported by graphics.
+## d. 
+Your friend suspects that if an employer provides a salary range for the job, the salary is large and hence more attractive to potential candidates. Investigate this claim. Your investigation should be supported by graphics.
 
 ```{r salary-range}
 Combined_Job_clean %>%
@@ -281,7 +285,8 @@ From the above, it is found that the claim is false as the upper part of the upp
 Moreover it is found that the bottom part of the plot which refers to lower salary is wider. This means that there are more number of people in lower salary intervals.
 
 
-e. Is the location (via by State) associated with the salary and/or sector? Show graphics to best your conclusion.
+## e. 
+Is the location (via by State) associated with the salary and/or sector? Show graphics to best your conclusion.
 
 ```{r salary-location}
 Combined_Job_clean %>% 
@@ -303,7 +308,7 @@ Combined_Job_clean %>%
 
 Based on the plot, it is found that salary indeed varies by States. The highest salary group is found in California(CA), followed by New York(NY) and Ohio(OH).  Whereas the lowest were found in Utah(UT) follow by Georgia(GA) and Iiana(IN).
 
-```{r salary-sector}
+```{r salary-sector, fig.width = 9, fig.height=6}
 Combined_Job_clean %>% 
   filter(Sector != -1) %>% 
     pivot_longer(cols = c(Salary_Min, Salary_Max),
@@ -321,6 +326,7 @@ Combined_Job_clean %>%
     scale_colour_discrete(labels = c("Max.Salary", "Min.Salary"))
 
 ```
+
 Based on the boxplot, it is found that the mean value of the maximum salary and minimum salary are close to each others within the different Sectors. Except from Travel & Tourism, Restaurants, Bars & Food Services as well as Mining & Metals which the mean maximum salary are slightly lower than the other sectors.  
 On the other hand, it is found that the mean maximum and minimum salary of Mining & Metals is approximately equals to the lower quantile of the salary Interval.   
 

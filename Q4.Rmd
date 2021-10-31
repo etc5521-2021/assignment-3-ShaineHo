@@ -22,7 +22,8 @@ Cholesterol <- read.csv("data/Cholesterol_R.csv")
 visinf_results <- read_csv("data/visinf-results.csv")
 ```
 
-a. Conduct a two-sample t-test and a Wilcoxon rank sum test to compare the mean cholesterol reduction between the margarine brands after 4 weeks. What graphics best compares these measurements across the brands? What do you conclude from the results of the tests and your graphics?
+## a. 
+Conduct a two-sample t-test and a Wilcoxon rank sum test to compare the mean cholesterol reduction between the margarine brands after 4 weeks. What graphics best compares these measurements across the brands? What do you conclude from the results of the tests and your graphics?
 
 ```{r t-test}
 #mutate diff column for the difference after 4 weeks
@@ -65,7 +66,8 @@ Cholesterol%>%
 
 Since there are not many outliers, it is easier to compare their difference by mean value. And it is obvious that the cholesterol reduction of margarine B is higher than A. It is because B's lower quantile is even higher than A's upper quantile.
 
-b. Construct a lineup for visual inference of the plot in (a). Ask your buddy, family and friends select a plot that looks different in the line-up an record their choices (the more people, the better). Based on your responses calculate the p-value from your visual inference.
+## b. 
+Construct a lineup for visual inference of the plot in (a). Ask your buddy, family and friends select a plot that looks different in the line-up an record their choices (the more people, the better). Based on your responses calculate the p-value from your visual inference.
 
 ```{r lineup-plot}
 set.seed(330)
@@ -91,11 +93,11 @@ paste0("The p-value is: ",round((1 - pbinom(5 - 1, 10, 1/10)),4))
 paste0("The power of visualisation is: ", 5/10)
 ```
 
-<br>
-c. You construct a set of lineups to compare the cholesterol reduction between the margarine brands after 8 weeks. The visual statistics used for the three lineups are: violin plot, boxplot, and dotplot. The lineups are shown to independent participant such that each participant will only see one lineup. The file visinf-results.csv contains the result from your visual inference experiment; the data dictionary is provided in the table below. Use this result to answer the following.
+## c. 
+You construct a set of lineups to compare the cholesterol reduction between the margarine brands after 8 weeks. The visual statistics used for the three lineups are: violin plot, boxplot, and dotplot. The lineups are shown to independent participant such that each participant will only see one lineup. The file visinf-results.csv contains the result from your visual inference experiment; the data dictionary is provided in the table below. Use this result to answer the following.
 
 
-i. Calculate the power of each lineup and provide the mean power, and its standard deviation, for each visual statistic.
+### i. Calculate the power of each lineup and provide the mean power, and its standard deviation, for each visual statistic.
 
 ```{r power}
 power <- visinf_results %>% 
@@ -123,6 +125,6 @@ power %>%
 ```
 
 
-ii. Based on the results, which visual statistic is the most powerful and why?
+### ii. Based on the results, which visual statistic is the most powerful and why?
 
 Based on the results, the violin plot is the most powerful one even the dot plot's mean of power is slightly higher than violin plot. It is because of violin plot's lower standard deviation of power which indicates that the actual values of this visualisation is close to the mean. Hence, it is more accurate.

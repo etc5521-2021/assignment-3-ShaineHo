@@ -22,7 +22,8 @@ control <- read_csv("data/control_data.csv")
 experiment <- read_csv("data/experiment_data.csv")
 ```
 
-a. Make a plot (or two) of the data that provides a suitable comparison between the pageviews of the two groups relative to time. Write a sentence comparing the two groups.
+## a. 
+Make a plot (or two) of the data that provides a suitable comparison between the pageviews of the two groups relative to time. Write a sentence comparing the two groups.
  
 ```{r data-cleaning-q3}
 #mutate new column: Group control and experiment
@@ -61,8 +62,8 @@ combined_clean %>%
 
 From the plot, it is found that the Pageviews of the two groups are basically following the similar trend.
 
-<br>
-b. Make an appropriate transformation of the data, and plot, to examine whether there is a difference in Clicks, summarising what you learn
+## b.
+Make an appropriate transformation of the data, and plot, to examine whether there is a difference in Clicks, summarising what you learn
 
 ```{r plot-b, out.width = "60%", out.height = "50%"}
 combined_clean %>% 
@@ -77,8 +78,8 @@ combined_clean %>%
 
 Based on the violin plot, the variation of clicks in control group is larger than control group. However, the number of clicks is higher in control group as there are wider shape at the upper part of the shape which means that the digital marketing measures might be lack of effectiveness.
 
-<br>
-c. Repeat (b) to check if there is a difference between the groups in Enrollments, summarising what you learn.
+## c. 
+Repeat (b) to check if there is a difference between the groups in Enrollments, summarising what you learn.
 
 ```{r plot-c, out.width = "60%", out.height = "50%"}
 combined_clean %>% 
@@ -93,8 +94,9 @@ combined_clean %>%
 
 Based on the violin plot, it is found that there are higher number of enrollments in the control group which means that the marketing measures are not that effective to the erollments of the free trial of the website.
 
-<br>
-d. Repeat (b) to check if there is a difference between the groups in Payments, summarising what you learn.
+
+## d. 
+Repeat (b) to check if there is a difference between the groups in Payments, summarising what you learn.
 
 ```{r plot-d, out.width = "60%", out.height = "50%"}
 combined_clean %>% 
@@ -109,8 +111,8 @@ combined_clean %>%
 
 According to the violin plot, it is found that the variation of experiment group is higher. Moreover, there are not obvious differences observed on the payments between two groups as control group is only slightly higher in payments. This means even there are some advertisement made in experiment group, the number of payments do not have significant change. Thus, the measure in experiment group is not effective.
 
-<br>
-e. The variables can be considered to monitor the flow of visitor traffic to the site. Pageviews is the number of visitors to the site, and some of these will click on the page. From those that click on the site some will enrol, and some of those that enrol will continue to pay for the service. Make a suitable plot to examine the flow of traffic, so that you can compare the flow between the two groups.
+## e. 
+The variables can be considered to monitor the flow of visitor traffic to the site. Pageviews is the number of visitors to the site, and some of these will click on the page. From those that click on the site some will enrol, and some of those that enrol will continue to pay for the service. Make a suitable plot to examine the flow of traffic, so that you can compare the flow between the two groups.
 
 ```{r plot-e-pc}
 combined_clean %>% 
@@ -154,8 +156,8 @@ combined_clean %>%
 
 From the above, it is found that the flow from enrollments to payments, the number of control and experiment group follow the same trend when the enrollment is below 200. However, there's an increase from 200 in control group when experiment is in opposite direction. This indicates that the\ digital marketing measures might be ineffective.
 
-<br>
-f. Check what you learn about the difference in flow of traffic between control and experiment using a lineup plot.   
+## f. 
+Check what you learn about the difference in flow of traffic between control and experiment using a lineup plot.   
 
 ```{r plot-f-pc, out.width="80%"}
 set.seed(330)
