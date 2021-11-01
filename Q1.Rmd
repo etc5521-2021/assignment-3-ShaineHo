@@ -24,7 +24,7 @@ DataScientist <- read_csv("data/DataScientist.csv")
 ## a. 
 Scrutinize the data to assess structure and quality. Are there any improbable or problematic entries? Provide a summary of checks performed and edit the data so entries are valid and meaningful where editing is reasonable to do.
 
-```{r data-cleaning-q1}
+```{r vis-dat}
 # Mutate a new column for the job Category and then Combine the three data sets
 DataAnalyst <- DataAnalyst %>% 
   mutate(Job_Category = "DataAnalyst")
@@ -38,10 +38,20 @@ DataScientist <- DataScientist %>%
 Combined_Job <- DataAnalyst %>% 
   rbind(BusinessAnalyst) %>% 
   rbind(DataScientist)
-  
+
+#replace -1 to NA
+Combined_Job[Combined_Job== -1] <- NA
+
+#visualize the missings
+visdat::vis_dat(Combined_Job, palette = "cb_safe")+
+  ggtitle("Visualization of missing data")
+```
+
+Based on the plot, it is found that there are a lot of missing data especially in Competitors, Easy Apply, Rating and Founded column.
+
+```{r data-cleaning-q1}
 # Separate the salary estimate into "Salary_Estimate" and "Salary_Est_Provider" and remove the missing value (-1) and bracket in provider
 Combined_Job_clean <- Combined_Job %>% 
-  filter(`Salary Estimate` != -1) %>% 
   separate(`Salary Estimate`, 
            into = c("Salary_Estimate", "Salary_Est_Provider"), 
            sep = "\\(") %>%
@@ -53,7 +63,7 @@ Combined_Job_clean <- Combined_Job %>%
 
 # Remove the "\n rating from Company Name"
 Combined_Job_clean <- Combined_Job_clean %>% 
-  filter(`Company Name` != -1 & `Company Name` != 1) %>% 
+  filter(`Company Name` != 1) %>% 
   separate(`Company Name`, into = c("Company_Name","remove"), sep = "\n" ) %>%
   select(-remove)
 
@@ -73,9 +83,10 @@ Combined_Job_clean <- Combined_Job_clean %>%
 
 # Remove missing (-1, 1, Unknown) and the word "employees"from the Size
 Combined_Job_clean <- Combined_Job_clean %>% 
-  filter(Size != -1 & Size != 1 & Size != "Unknown") %>% 
+  filter(Size != 1 & Size != "Unknown") %>% 
   separate(Size, into = c("Size", "remove"), sep = " e") %>% 
   select(-remove)
+
 ```
 
 ## b. 

@@ -3,6 +3,180 @@ title: "Exercise 2"
 date: "`r Sys.Date()`"
 output: 
   bookdown::html_document2
+runtime: shiny
 ---
 
 # Exercise 2
+
+```{r settings-q2, message = FALSE}
+#settings and libraries
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+library(fitzRoy)
+library(tidyverse)
+library(patchwork)
+library(plotly)
+library(shiny)
+```
+
+
+```{r load-data-q2}
+load("data/aflw.rda")
+load("data/aflw_scags.rda")
+```
+
+## a. 
+- Answer these questions from the data. How many teams in the competition? How many players? How many rounds in the competition? (Check your answers after calculating using internet search.)
+
+```{r team-number}
+unique(aflw$team.name) %>% 
+  as.data.frame() %>% 
+  tally() %>% 
+  rename(`Number of Teams` = "n")
+```
+
+Based on the calculations, **there are totally 14 teams.**   
+Based on [wiki-AFLW](https://en.wikipedia.org/wiki/AFL_Women%27s), there were 8 teams for the first season. Later it expanded to 10 in 2019 and to 14 teams in 2020.
+
+```{r players-number}
+aflw <- aflw %>% 
+  mutate(player.fullName = paste0(aflw$player.givenName, " ", aflw$player.player.player.surname)) 
+
+unique(aflw$player.fullName)%>% 
+  as.data.frame() %>% 
+  tally() %>% 
+  rename(`Number of Players` = "n")
+```
+
+Since there may be repetitions in Last name or given name, the names were combined to full name before calculation. Based on the calculations, **there are totally 372 players**.   
+According to [wiki-AFLW: Rules](https://en.wikipedia.org/wiki/AFL_Women%27s#Rules), there should be 16 players on field and 5 interchange players which make a total of 21 players for each team. Hence, there should be $21\times14=294$ players. However, for each team, there are more than 21 players and they can send different players for each match. Hence, this explains the remaining $372-294=78$ players.
+
+```{r rounds-number}
+  unique(aflw$round.name) %>% 
+  as.data.frame() %>% 
+  tally() %>% 
+    rename(`Number of Rounds` = "n")
+```
+
+Based on the calculations, **there are totally 7 rounds**.   
+Based on [AFLW-STATS](https://www.womens.afl/stats), there were 8 rounds in 2017, 2018, 9 in 2019, 7 in 2020 due to COVID-19 and 10 in 2021.
+
+## b.
+- The 2020 season was interrupted by COVID, so there was no winning team. Make an appropriate plot of the goals by team and suggest which team might have been likely to win if the season had played out.
+
+```{r goal-details}
+goal_no <- aflw %>% 
+  group_by(team.name) %>% 
+  summarise(total_goals = sum(goals)) %>% 
+  ggplot(aes(x = total_goals,
+             y = reorder(team.name, total_goals)))+
+  geom_col()+
+  labs(x = "Number of Goals",
+       y = "Team Name",
+       title = "Total number of Goals")+
+  theme_bw()
+
+goal_acc <- aflw %>% 
+  group_by(team.name) %>% 
+  summarise(goal_accuracy = mean(goalAccuracy)) %>% 
+  ggplot(aes(x = goal_accuracy,
+             y = reorder(team.name, goal_accuracy)))+
+  geom_col()+
+  labs(x = "Number of Goals",
+       y = "Team Name",
+       title = "Average Goal Accuracy")+
+  theme_bw()
+
+goal_no|goal_acc
+```
+
+From the above, Team Kangaroos is most likely to win if the season had played out, the reasons are as follow. Based on the total number number of goals team Fremantle has highest number of goals followed closely by team Kangaroos. While the average accuracy of Team Kangaroos followed closely by team Calton. When considering these two data together, it draws the conclusion that Team Kangaroos is most likely to win.
+
+## c.
+- If you were to make a pairs plot of the numeric variables, how many plots would you need to make? (DON’T MAKE THE PLOT!!!)
+
+There are totally 34 variables with one repetition. After reducing the repeated variables, there are 33 remainings. And the number of paired plots can be calculated by unordered without repetitions. Hence, the number of plots is $\frac{33!}{2!(33-2)!}=528$.
+
+
+## d. 
+- Summarise the players, by computing the means for all of the statistics. On this data, one pair of variables variables has an L-shaped pattern. (See the slides from week 7 if you need a reminder what this shape is.) Use scagnostics to find the pair. Make the plot, report the scagnostic used. Write a sentence to explain the relationship between the two variables, in terms of players skills.
+
+```{r aflw-mean}
+aflw_mean <- aflw %>% 
+  group_by(player.fullName) %>% 
+  summarise(across(where(is.numeric), ~mean(.)))
+```
+
+```{r scags-data-d}
+aflw_scags %>% 
+  select(Var1,Var2, stringy,striated) %>% 
+  arrange(desc(striated)) %>% 
+  head(10)
+```
+
+As stringy and striated refer to the shape and skinness of the plot. These two are chosen for identifying the L-shape from the plot.
+
+```{r}
+aflw_mean %>% 
+  ggplot(aes(x = hitouts, y = bounces)) +
+  geom_point()+
+  labs(x = "Hit-Outs",
+       y = "Bounces",
+       title = "L Shaped plot")+
+  theme_bw()
+```
+
+From the vairable hitouts and bounces, L-shaped is observed. From the plot, it is found that most of the players have either of these skills. It is because, based on [AFLW-stats-glossary](https://www.afl.com.au/news/144837/stats-glossary-every-stat-explained), hitouts refer to "Knocking the ball out of a ruck contest following a stoppage with clear control, regardless of which side wins the following contest at ground level" which is totally opposite to bounces. Hence, it explains the L-shape of the plot.
+
+## e.
+- Find a pair of variables that exhibit a barrier. Plot it and report the scagnostic used. Write sentence explaining the relationship.
+
+```{r scag-data-e}
+aflw_scags %>%
+  select(Var1, Var2, outlying, clumpy) %>% 
+  arrange(desc(outlying)) %>% 
+  head(10)
+```
+
+As outlying and clumpy refer to the skewness and outlying of the plot. These two are chosen for identifying the barriers from the plot.
+
+```{r barriers-plot}
+aflw_mean %>%
+  ggplot(aes(x = disposalEfficiency , y =  hitouts	))+
+  geom_point()+
+  labs(x = "Disposal Efficiency",
+       y = "Hit-Outs",
+       title = "Barriers plot")+
+  theme_bw()
+```
+
+Based on the barriers plot, it is found that there are barriers when Hit-Outs are above 15 or 5 and Disposal Efficiency is below 25 or above 30, respectively. As disposal efficiency refers to the efficiency that the players are able to get rid of the ball. It is less likely for players to hold the balls for too long or short period of time. This explains the lack of dots when disposal efficiency is either high or low. Moreover, as mentioned in d, it is less likely for the players to have many times of clear control of ball. On the other hand, it is found that most of the players are having no hit-outs and 25-80% efficiency rate which hey are more likely to have hit-outs.
+
+## f. 
+- Writing code similar to that in lecture 7B, make an interactive plotly parallel coordinate plot of the scagnostics. You can also refer to the plotly website to work out some of the difficult parts. There are two pieces that are really important to have: (1) scale on each axis needs to be 0-1, not individual variable range, (2) the text outputted when traces are selected should include the pair of variables with that set of scagnostic values. Then answer these questions:
+
+
+```{r shiny}
+ui <- fluidPage(
+  plotlyOutput("parcoords"),
+  verbatimTextOutput("data"))
+
+server <- function(input, output, session) {
+  
+  aflw_numeric <- aflw_scags[,3:15]
+  
+  output$parcoords <- renderPlotly({
+    
+    dims <- Map(function(x, y) {
+      list(values = x, range = c(0,1), label = y)
+    }, aflw_numeric, names(aflw_numeric), USE.NAMES = FALSE)
+    plot_ly(type = 'parcoords', dimensions = dims, 
+            source = "pcoords") %>% 
+      layout(margin = list(r = 30)) %>%
+      event_register("plotly_restyle")
+  })
+
+}
+
+shinyApp(ui, server)
+  
+```
