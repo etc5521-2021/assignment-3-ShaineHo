@@ -1,3 +1,3 @@
 # ETC5521 Assignment 3
 
-Name: **[FILL]**
+Name: **Yin Shan Ho**
