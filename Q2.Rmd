@@ -154,18 +154,15 @@ Based on the barriers plot, it is found that there are barriers when Hit-Outs ar
 ## f. 
 - Writing code similar to that in lecture 7B, make an interactive plotly parallel coordinate plot of the scagnostics. You can also refer to the plotly website to work out some of the difficult parts. There are two pieces that are really important to have: (1) scale on each axis needs to be 0-1, not individual variable range, (2) the text outputted when traces are selected should include the pair of variables with that set of scagnostic values. Then answer these questions:
 
-
 ```{r shiny}
 ui <- fluidPage(
   plotlyOutput("parcoords"),
   verbatimTextOutput("data"))
 
 server <- function(input, output, session) {
-  
   aflw_numeric <- aflw_scags[,3:15]
   
   output$parcoords <- renderPlotly({
-    
     dims <- Map(function(x, y) {
       list(values = x, range = c(0,1), label = y)
     }, aflw_numeric, names(aflw_numeric), USE.NAMES = FALSE)
@@ -174,9 +171,80 @@ server <- function(input, output, session) {
       layout(margin = list(r = 30)) %>%
       event_register("plotly_restyle")
   })
+  
+  ranges <- reactiveValues()
+  observeEvent(event_data("plotly_restyle", source = "pcoords"),
+  {
+    d <- event_data("plotly_restyle", source = "pcoords")
 
+    dimension <- as.numeric(stringr::str_extract(names(d[[1]]),
+                                                 "[0-9]+"))
+    if (!length(dimension)) return()
+    dimension_name <- names(aflw_numeric)[[dimension + 1]]
+
+    info <- d[[1]][[1]]
+    
+    ranges[[dimension_name]] <- if (length(dim(info)) == 3) {
+      lapply(seq_len(dim(info)[2]), function(i) info[,i,])
+    } else {
+      list(as.numeric(info))
+    }
+  })
+  
+  aflw_selected <- reactive({
+    keep <- TRUE
+    for (i in names(ranges)) {
+      range_ <- ranges[[i]]
+      keep_var <- FALSE
+      for (j in seq_along(range_)) {
+        rng <- range_[[j]]
+        keep_var <- keep_var | dplyr::between(aflw_scags[[i]], 
+                                        min(rng), max(rng))
+      }
+      keep <- keep & keep_var
+    }
+    aflw_scags[keep, ]
+  })
+  
+  output$data <- renderPrint({
+    tibble::as_tibble(aflw_selected())
+  })
 }
 
 shinyApp(ui, server)
-  
+
 ```
+
+<mark> **Noted that the shinyapp is not available in index.Rmd, please render it in Q2.Rmd** </mark>
+
+### i. 
+- Summarise the relationships between the scagnostics, in terms of positive and negative association, outliers, clustering.
+
+In terms of **positive and negative association**. It refers to the variables moving in the same direction. For instance, when $X_1$ increases 1 unit $X_2$ increases to a specific unit. While opposite direction refers to the variable increase when another variable decrease.   
+Based on the plot, it is found that *stringy*, *clumpy*, *skewed*, *monotonic* have the positive association due to their increasing trend with the range around (0.5 - 1).    
+While  *striated* and *splines* have negative association to the other variables. As they go opposite direction(i.e. decrease) ranged (0.8 - 0).    
+There are few outlyings, which are not in the majority range, found in different variables. For example, in *striated2*, *clumpy2*, *outlying*.
+The clustering refers to data concentrated by specific ranges. For instance, ranged 0 and (0.3-0.7) in *convex*. 0, (0.3-0.6), 1 in *skinny*.
+
+### ii.
+- Pairs that have high values on convex (non-zero) tend to have what type of values on outlying, stringy, striated, skewed, skinny and splines?
+
+Having high values on convex, means:   
+*Outlying* tends to be lower and concentrate at range (0.1 - 0.3).      
+*String* tends to have lower values.   
+*Striated* tends to to have lower values.  
+*Skewed* tends to to have higher values.   
+*Kinny* tend to be in ranged (0.2 - 0.4) without sepcific trends.   
+*Splines* tend to spread over range (0 - 1) which is from minimum to maximum without obvious trend observed.
+
+### iii.
+- Pairs of variables that have high values on skewed tend to have what type of values on outlying, stringy, striated, and splines?
+
+Having high values on skewed, means:   
+*Outlying*, *String* and *striated* tend to be higher as most of them move in the same direction.   
+*Splines* tends to be lower however, the trend is not that obvious as there are values observed spreading over.   
+
+### iv. 
+- Identify one pair of variables that might be considered to have an unusual combination of scagnostic values, ie is an outlier in the scagnostics.
+
+The pair of variables are *hitouts in Var1* and *bounces in Var2*. It is because this pair is the only pair that have different direction towards the other pairs in scanostics variable *Striated*. The the other pairs are having downwards trends while this pair is having upwards trend.
