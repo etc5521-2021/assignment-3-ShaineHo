@@ -2,4 +2,4 @@
 
 Name: **Yin Shan Ho**
 
-* The shinyapp is not available in index.Rmd, please refer to and render it in Q2.Rmd.
+* The shiny is not compile into document index.Rmd, please render it by knitting Q2.Rmd.

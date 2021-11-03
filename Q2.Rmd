@@ -215,7 +215,7 @@ shinyApp(ui, server)
 
 ```
 
-<mark> **Noted that the shinyapp is not available in index.Rmd, please render it in Q2.Rmd** </mark>
+<mark> **Noted that the shiny is not compile into document index.Rmd, please render it by knitting Q2.Rmd** </mark>
 
 ### i. 
 - Summarise the relationships between the scagnostics, in terms of positive and negative association, outliers, clustering.
